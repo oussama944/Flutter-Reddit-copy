@@ -8,7 +8,7 @@ import '../../models/user_model.dart';
 
 final userProvider = StateProvider<UserModel?>((ref) => null);
 
-final authControllerProvider = StateNotifierProvider<AuthController,bool>(
+final authControllerProvider = StateNotifierProvider<AuthController, bool>(
   (ref) => AuthController(
     authRepository: ref.watch(authRepositoryProvider),
     ref: ref,
@@ -33,7 +33,6 @@ class AuthController extends StateNotifier<bool> {
         _ref = ref,
         super(false); //loading
 
-
   Stream<User?> get authStateChange => _authRepository.authStateChange;
 
   void signInWithGoogle(BuildContext context) async {
@@ -47,10 +46,11 @@ class AuthController extends StateNotifier<bool> {
     );
   }
 
-
-  Stream<UserModel> getUserData(String uid){
+  Stream<UserModel> getUserData(String uid) {
     return _authRepository.getUserData(uid);
   }
 
-
+  void logout() {
+    _authRepository.logout();
+  }
 }
