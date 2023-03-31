@@ -12,6 +12,7 @@ import 'package:routemaster/routemaster.dart';
 
 import '../../../core/failure.dart';
 import '../../../core/providers/storage_repository-provider.dart';
+import '../../models/post_model.dart';
 
 final userCommunitiesProvider = StreamProvider((ref) {
   final communityController = ref.watch(communityControllerProvider.notifier);
@@ -150,5 +151,9 @@ class CommunityController extends StateNotifier<bool> {
       (l) => showSnackBar(context, l.message),
       (r) => Routemaster.of(context).pop(),
     );
+  }
+
+  Stream<List<Post>> getCommunityPosts(String name) {
+    return _communityRepository.getCommunityPosts(name);
   }
 }

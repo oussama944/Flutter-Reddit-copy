@@ -1,10 +1,9 @@
-import 'dart:io';
-
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:reddit_clone_app/core/providers/firebase_provider.dart';
 import 'package:reddit_clone_app/core/type_defs.dart';
+import 'dart:io';
 
 import '../failure.dart';
 
