@@ -8,6 +8,7 @@ import 'package:routemaster/routemaster.dart';
 
 import '../../../core/providers/storage_repository-provider.dart';
 import '../../../core/utils.dart';
+import '../../models/post_model.dart';
 import '../repository/user_profile_repository.dart';
 
 final userProfileControllerProvider =
@@ -18,6 +19,10 @@ final userProfileControllerProvider =
       userProfileRepository: userProfileRepository,
       ref: ref,
       storageRepository: storageRepository);
+});
+
+final getUserPostsProvider = StreamProvider.family((ref, String uid) {
+  return ref.read(userProfileControllerProvider.notifier).getUserPosts(uid);
 });
 
 class UserProfileController extends StateNotifier<bool> {
@@ -33,17 +38,13 @@ class UserProfileController extends StateNotifier<bool> {
         _storageRepository = storageRepository,
         super(false);
 
-
-
-
-void editCommunity({
+  void editCommunity({
     required File? profileFile,
     required File? bannerFile,
     required BuildContext context,
     required String name,
   }) async {
     state = true;
-
 
     UserModel user = _ref.read(userProvider)!;
 
@@ -80,11 +81,11 @@ void editCommunity({
       (r) {
         _ref.read(userProvider.notifier).update((state) => user);
         Routemaster.of(context).pop();
-      }, 
+      },
     );
   }
 
-
-
-
-        }
+  Stream<List<Post>> getUserPosts(String uid) {
+    return _userProfileRepository.getUserPosts(uid);
+  }
+}

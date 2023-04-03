@@ -39,6 +39,11 @@ final searchCommunityProvider = StreamProvider.family((ref, String query) {
   return ref.watch(communityControllerProvider.notifier).searchCommunity(query);
 });
 
+final getCommunityProvider = StreamProvider.family((ref, String name){
+return ref.read(communityControllerProvider.notifier).getCommunityPosts(name);
+});
+
+
 class CommunityController extends StateNotifier<bool> {
   final CommunityRepository _communityRepository;
   final Ref _ref;

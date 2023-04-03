@@ -22,8 +22,7 @@ final postControllerProvider =
       storageRepository: storageRepository);
 });
 
-final userPostsProvider =
-    StreamProvider.family((ref, List<Community> communities) {
+final userPostsProvider = StreamProvider.family((ref, List<Community> communities) {
   final postController = ref.watch(postControllerProvider.notifier);
   return postController.fetchUserPosts(communities);
 });
@@ -134,7 +133,7 @@ class PostController extends StateNotifier<bool> {
         commentCount: 0,
         username: user.name,
         uid: user.uid,
-        type: 'text',
+        type: 'image',
         createdAt: DateTime.now(),
         awards: [],
         link: r,
@@ -154,4 +153,24 @@ class PostController extends StateNotifier<bool> {
     }
     return Stream.value([]);
   }
+
+
+  void deletePost(Post post, BuildContext context)async {
+    final res = await _postRepository.deletePost(post);
+    res.fold((l) => null,(r) => showSnackBar(context, 'Le post a bien était supprimé'));
+  }
+
+  void upVote(Post post, BuildContext context)async {
+    final uid= _ref.read(userProvider)!.uid;
+    _postRepository.upVote(post,uid);
+    showSnackBar(context, '+1');
+  }
+
+
+  void downVote(Post post, BuildContext context)async {
+    final uid= _ref.read(userProvider)!.uid;
+    _postRepository.downvotes(post,uid);
+    showSnackBar(context, '-1');
+  }
+
 }
