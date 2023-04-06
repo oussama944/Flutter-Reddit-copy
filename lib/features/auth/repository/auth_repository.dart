@@ -11,7 +11,6 @@ import '../../../core/constants/constants.dart';
 import '../../../core/type_defs.dart';
 import '../../models/user_model.dart';
 
-
 final authRepositoryProvider = Provider(
   (ref) => AuthRepository(
     firestore: ref.read(firestoreProvider),
@@ -38,7 +37,7 @@ class AuthRepository {
 
   Stream<User?> get authStateChange => _auth.authStateChanges();
 
-  FutureEither<UserModel> signInWithGoogle() async {
+  FutureEither<UserModel> signInWithGoogle(bool isFromLogin) async {
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
@@ -49,8 +48,12 @@ class AuthRepository {
         idToken: googleAuth?.idToken,
       );
 
-      UserCredential userCredential =
-          await _auth.signInWithCredential(credential);
+      UserCredential userCredential;
+      if (isFromLogin) {
+        userCredential = await _auth.signInWithCredential(credential);
+      }else{
+        userCredential = await _auth.currentUser!.linkWithCredential(credential);
+      }
 
       UserModel userModel;
 
@@ -63,29 +66,50 @@ class AuthRepository {
           uid: userCredential.user!.uid,
           isAuthenticated: true,
           karma: 0,
-          awards: [],
+          awards: ['gold', 'helpful', 'awesomeAns'],
         );
         await _users.doc(userCredential.user!.uid).set(userModel.toMap());
-      }else{
+      } else {
         userModel = await getUserData(userCredential.user!.uid).first;
       }
 
-
       return right(userModel);
-    } on FirebaseException catch(e){
+    } on FirebaseException catch (e) {
       throw e.message!;
-    }
-     catch (e) {
+    } catch (e) {
       return left(Failure(e.toString()));
     }
   }
 
-  Stream<UserModel> getUserData(String uid){
-    return _users.doc(uid).snapshots().map((event) => UserModel.fromMap(event.data() as Map<String, dynamic>));
+  Stream<UserModel> getUserData(String uid) {
+    return _users.doc(uid).snapshots().map(
+        (event) => UserModel.fromMap(event.data() as Map<String, dynamic>));
   }
 
-  void logout()async {
+  void logout() async {
     await _googleSignIn.signOut();
     await _auth.signOut();
+  }
+
+  FutureEither<UserModel> signInAsGuest() async {
+    try {
+      var userCredential = await _auth.signInAnonymously();
+      UserModel userModel = UserModel(
+        name: 'Guest',
+        profilePicture: Constants.avatarDefault,
+        banner: Constants.bannerDefault,
+        uid: userCredential.user!.uid,
+        isAuthenticated: false,
+        karma: 0,
+        awards: [],
+      );
+      await _users.doc(userCredential.user!.uid).set(userModel.toMap());
+
+      return right(userModel);
+    } on FirebaseException catch (e) {
+      throw e.message!;
+    } catch (e) {
+      return left(Failure(e.toString()));
+    }
   }
 }

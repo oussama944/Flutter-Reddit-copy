@@ -9,6 +9,7 @@ import 'package:routemaster/routemaster.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/providers/storage_repository-provider.dart';
+import '../../models/comment_model.dart';
 import '../../models/community_model.dart';
 import '../../models/post_model.dart';
 
@@ -22,9 +23,26 @@ final postControllerProvider =
       storageRepository: storageRepository);
 });
 
-final userPostsProvider = StreamProvider.family((ref, List<Community> communities) {
+final userPostsProvider =
+    StreamProvider.family((ref, List<Community> communities) {
   final postController = ref.watch(postControllerProvider.notifier);
   return postController.fetchUserPosts(communities);
+});
+
+final guestPostsProvider =
+    StreamProvider((ref,) {
+  final postController = ref.watch(postControllerProvider.notifier);
+  return postController.fetchGuestPosts();
+});
+
+final getPostByIdProvider = StreamProvider.family((ref, String postId) {
+  final postController = ref.watch(postControllerProvider.notifier);
+  return postController.getPostById(postId);
+});
+
+final getPostCommentsProvider = StreamProvider.family((ref, String postId) {
+  final postController = ref.watch(postControllerProvider.notifier);
+  return postController.fetchCommentsOfPost(postId);
 });
 
 class PostController extends StateNotifier<bool> {
@@ -154,23 +172,56 @@ class PostController extends StateNotifier<bool> {
     return Stream.value([]);
   }
 
-
-  void deletePost(Post post, BuildContext context)async {
-    final res = await _postRepository.deletePost(post);
-    res.fold((l) => null,(r) => showSnackBar(context, 'Le post a bien était supprimé'));
+    Stream<List<Post>> fetchGuestPosts() {
+      return _postRepository.fetchGuestPosts();
   }
 
-  void upVote(Post post, BuildContext context)async {
-    final uid= _ref.read(userProvider)!.uid;
-    _postRepository.upVote(post,uid);
+  void deletePost(Post post, BuildContext context) async {
+    final res = await _postRepository.deletePost(post);
+    res.fold((l) => null,
+        (r) => showSnackBar(context, 'Le post a bien était supprimé'));
+  }
+
+  void upVote(Post post, BuildContext context) async {
+    final uid = _ref.read(userProvider)!.uid;
+    _postRepository.upVote(post, uid);
     showSnackBar(context, '+1');
   }
 
-
-  void downVote(Post post, BuildContext context)async {
-    final uid= _ref.read(userProvider)!.uid;
-    _postRepository.downvotes(post,uid);
+  void downVote(Post post, BuildContext context) async {
+    final uid = _ref.read(userProvider)!.uid;
+    _postRepository.downvotes(post, uid);
     showSnackBar(context, '-1');
   }
 
+  Stream<Post> getPostById(String postId) {
+    return _postRepository.getPostById(postId);
+  }
+
+  void addComment({
+    required String text,
+    required BuildContext context,
+    required Post post,
+  }) async {
+    final user = _ref.read(userProvider)!;
+    String commentId = const Uuid().v1();
+    Comment comment = Comment(
+      id: commentId,
+      text: text,
+      createdAt: DateTime.now(),
+      postId: post.id,
+      username: user.name,
+      profilePic: user.profilePicture,
+    );
+    final res = await _postRepository.addComment(comment);
+
+    res.fold(
+      (l) => showSnackBar(context, l.message),
+      (r) => null,
+    );
+  }
+
+  Stream<List<Comment>> fetchCommentsOfPost(String postId) {
+    return _postRepository.getCommentsOfPost(postId);
+  }
 }

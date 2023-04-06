@@ -35,6 +35,7 @@ void onPageChanged(int page ){
   Widget build(BuildContext context) {
     final user = ref.watch(userProvider)!;
     final currentTheme = ref.watch(themeNotifierProvider);
+    final isGuest = !user.isAuthenticated;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Accueil'),
@@ -64,8 +65,8 @@ void onPageChanged(int page ){
       ),
       body: Constants.tabWidgets[_page],
       drawer: const CommunityListDrawer(),
-      endDrawer: const ProfilDrawer(),
-      bottomNavigationBar: CupertinoTabBar(
+      endDrawer: isGuest? null : const ProfilDrawer(),
+      bottomNavigationBar: isGuest? null : CupertinoTabBar(
         activeColor: currentTheme.iconTheme.color,
         items: const [
           BottomNavigationBarItem(
